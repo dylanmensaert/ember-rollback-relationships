@@ -1,27 +1,10 @@
 # ember-rollback-relationships
 
-This README outlines the details of collaborating on this Ember addon.
+Adds behaviour to [DS.Model](http://emberjs.com/api/data/classes/DS.Model.html) so **relationships** are also rollbacked when `model.rollbackAttributes()` is called.
 
-## Installation
+This addon works without any extra implementation requirements.
 
-* `git clone <repository-url>` this repository
-* `cd ember-rollback-relationships`
-* `npm install`
-* `bower install`
-
-## Running
-
-* `ember serve`
-* Visit your app at [http://localhost:4200](http://localhost:4200).
-
-## Running Tests
-
-* `npm test` (Runs `ember try:each` to test your addon against multiple Ember versions)
-* `ember test`
-* `ember test --server`
-
-## Building
-
-* `ember build`
-
-For more information on using ember-cli, visit [https://ember-cli.com/](https://ember-cli.com/).
+Calling `this._super();` is required if you are using any of the following Events:
+- didCreate
+- didLoad
+- didUpdate
