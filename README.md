@@ -1,4 +1,4 @@
-# ember-rollback-relationships
+`ember install ember-rollback-relationships`
 
 Adds behaviour to [DS.Model](http://emberjs.com/api/data/classes/DS.Model.html) so **relationships** are also rollbacked when `model.rollbackAttributes()` is called.
 
