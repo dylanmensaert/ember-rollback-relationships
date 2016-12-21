@@ -38,6 +38,9 @@ export default {
 
                 return changedRelationships;
             },
+            ready: function() {
+                this.resetOldRelationships();
+            },
             didCreate: function() {
                 this.resetOldRelationships();
             },
