@@ -8,19 +8,21 @@ export default {
             resetOldRelationships: function() {
                 let oldRelationships = {};
 
-                this.eachRelationship(function(name, descriptor) {
-                    if (descriptor.kind === 'belongsTo') {
-                        let id = this.belongsTo(name).id();
+                Ember.run.schedule('actions', this, function() {
+                    this.eachRelationship(function(name, descriptor) {
+                        if (descriptor.kind === 'belongsTo') {
+                            let id = this.belongsTo(name).id();
 
-                        if (!id) {
-                            id = null;
+                            if (!id) {
+                                id = null;
+                            }
+
+                            oldRelationships[name] = id;
                         }
+                    }, this);
 
-                        oldRelationships[name] = id;
-                    }
-                }, this);
-
-                this.set('oldRelationships', oldRelationships);
+                    this.set('oldRelationships', oldRelationships);
+                });
             },
             getChangedRelationships: function() {
                 let oldRelationships = this.get('oldRelationships'),
