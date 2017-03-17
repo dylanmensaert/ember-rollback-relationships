@@ -1,6 +1,6 @@
 {
     "name": "ember-rollback-relationships",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "The default blueprint for ember-cli addons.",
     "keywords": [
         "ember-addon"
@@ -11,7 +11,10 @@
         "doc": "doc",
         "test": "tests"
     },
-    "repository": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dylanmensaert/ember-rollback-relationships"
+    },
     "scripts": {
         "build": "ember build",
         "start": "ember server",
