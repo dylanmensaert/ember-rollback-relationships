@@ -4,12 +4,14 @@ export default {
     name: 'reopen-model',
     initialize: function() {
         DS.Model.reopen({
-            oldRelationships: null,
+            oldBelongsTo: null,
+            oldHasMany: null,
             resetOldRelationships: function() {
-                let oldRelationships = {};
-
+                let oldBelongsTo = {};
+                let oldHasMany = {};
                 Ember.run.schedule('actions', this, function() {
                     this.eachRelationship(function(name, descriptor) {
+
                         if (descriptor.kind === 'belongsTo') {
                             let id = this.belongsTo(name).id();
 
@@ -17,23 +19,47 @@ export default {
                                 id = null;
                             }
 
-                            oldRelationships[name] = id;
+                            oldBelongsTo[name] = id;
+                        }
+                        if (descriptor.kind === 'hasMany' && this.hasMany(name).value()) {
+                            let ids = this.hasMany(name).value().currentState.map(model=>model.id);
+                            oldHasMany[name] = ids;
                         }
                     }, this);
 
-                    this.set('oldRelationships', oldRelationships);
+                    this.set('oldBelongsTo', oldBelongsTo);
+                    this.set('oldHasMany', oldHasMany);
                 });
             },
+            hasChangedRelationships: function() {
+                const changedRelationships = this.getChangedRelationships();
+                for (let prop in changedRelationships) {
+                    if (changedRelationships[prop]) {
+                        if (!changedRelationships[prop].hasOwnProperty("length") || changedRelationships[prop].length>0)
+                        return true;
+                    }
+                }
+                return false;
+            },
             getChangedRelationships: function() {
-                let oldRelationships = this.get('oldRelationships'),
+                let oldBelongsTo = this.get('oldBelongsTo'),
+                    oldHasMany = this.get('oldHasMany'),
                     changedRelationships = {};
 
                 this.eachRelationship(function(name, descriptor) {
                     if (descriptor.kind === 'belongsTo') {
                         let id = this.belongsTo(name).id();
 
-                        if (oldRelationships[name] !== id) {
+                        if (oldBelongsTo[name] !== id) {
                             changedRelationships[name] = id;
+                        }
+                    }
+                    if (descriptor.kind === 'hasMany' && this.hasMany(name).value()) {
+                        let ids = this.hasMany(name).value().currentState.map(model=>model.id);
+                        if (!oldHasMany[name]) {
+                            changedRelationships[name] = ids;
+                        } else {
+                            changedRelationships[name] = ids.filter(id=>oldHasMany[name].indexOf(id)===-1).concat(oldHasMany[name].filter(id=>ids.indexOf(id)===-1));
                         }
                     }
                 }, this);
@@ -53,11 +79,11 @@ export default {
                 this.resetOldRelationships();
             },
             rollbackAttributes: function() {
-                let oldRelationships = this.get('oldRelationships');
-
+                let oldBelongsTo = this.get('oldBelongsTo');
+                let oldHasMany = this.get('oldHasMany');
                 this.eachRelationship(function(name, descriptor) {
                     if (descriptor.kind === 'belongsTo') {
-                        let id = oldRelationships[name],
+                        let id = oldBelongsTo[name],
                             value = id;
 
                         if (id) {
@@ -69,6 +95,12 @@ export default {
                         }
 
                         this.set(name, value);
+                    }
+                    if (descriptor.kind === 'hasMany') {
+                        let ids = oldHasMany[name];
+                        if (ids) {
+                            this.set(name, ids.map(id=> this.store.peekRecord(descriptor.type, id)));
+                        }
                     }
                 }, this);
 
