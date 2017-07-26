@@ -99,7 +99,7 @@ export default {
                     if (descriptor.kind === 'hasMany') {
                         let ids = oldHasMany[name];
                         if (ids) {
-                            this.set(name, ids.map(id=> this.store.peekRecord(descriptor.type, id)));
+                            this.set(name, ids.filter(id=>id!=null).map(id=> this.store.peekRecord(descriptor.type, id)));
                         }
                     }
                 }, this);
