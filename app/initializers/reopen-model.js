@@ -8,7 +8,7 @@ export default {
             oldHasMany: null,
             resetOldRelationships: function() {
                 let oldBelongsTo = {};
-                let oldHasMany = {};
+                this.set('oldHasMany', {});
                 Ember.run.schedule('actions', this, function() {
                     this.eachRelationship(function(name, descriptor) {
 
@@ -21,14 +21,18 @@ export default {
 
                             oldBelongsTo[name] = id;
                         }
-                        if (descriptor.kind === 'hasMany' && this.hasMany(name).value()) {
-                            let ids = this.hasMany(name).value().currentState.map(model=>model.id);
-                            oldHasMany[name] = ids;
+                        if (descriptor.kind === 'hasMany') {
+                            this.hasMany(name).load().then((entities)=> {
+                                if (entities && entities.length) {
+                                    const oldHasMany = this.get("oldHasMany");
+                                    oldHasMany[name] = entities.map(model=>model.id);
+                                    this.set('oldHasMany', oldHasMany);
+                                }
+                            });
                         }
                     }, this);
-
                     this.set('oldBelongsTo', oldBelongsTo);
-                    this.set('oldHasMany', oldHasMany);
+                    
                 });
             },
             hasChangedRelationships: function() {
@@ -55,7 +59,7 @@ export default {
                         }
                     }
                     if (descriptor.kind === 'hasMany' && this.hasMany(name).value()) {
-                        let ids = this.hasMany(name).value().currentState.map(model=>model.id);
+                        let ids = this.hasMany(name).value().map(model=>model.id);
                         if (!oldHasMany[name]) {
                             changedRelationships[name] = ids;
                         } else {
