@@ -6,12 +6,15 @@
     "ember-addon"
   ],
   "license": "MIT",
-  "author": "",
+  "author": "Dylan Mensaert",
   "directories": {
     "doc": "doc",
     "test": "tests"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dylanmensaert/ember-rollback-relationships"
+  },
   "scripts": {
     "build": "ember build",
     "start": "ember server",
