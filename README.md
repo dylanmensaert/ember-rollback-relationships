@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/dylanmensaert/https://travis-ci.org/dylanmensaert/ember-rollback-relationships.png)](https://travis-ci.org/dylanmensaert/ember-rollback-relationships)
+# ember-rollback-relationships
+[![Build Status](https://api.travis-ci.org/dylanmensaert/ember-rollback-relationships.png)](https://travis-ci.org/dylanmensaert/ember-rollback-relationships)
 [![Code Climate](https://codeclimate.com/github/dylanmensaert/ember-rollback-relationships.png)](https://codeclimate.com/github/dylanmensaert/ember-rollback-relationships)
 [![Dependency Status](https://www.versioneye.com/user/projects/55c2641f653762002000287d/badge.svg?style=flat)](https://www.versioneye.com/user/projects/59cbd0032de28c00382c93b2)
 
