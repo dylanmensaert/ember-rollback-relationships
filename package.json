@@ -1,6 +1,6 @@
 {
   "name": "ember-rollback-relationships",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "An Ember addon which provides rollbacking of belongsTo relationships.",
   "keywords": [
     "ember-addon"
