@@ -56,7 +56,7 @@ export default {
                 let oldRelationships = this.get('oldRelationships');
 
                 this.eachRelationship(function(name, descriptor) {
-                    if (descriptor.kind === 'belongsTo') {
+                    if (oldRelationships && descriptor.kind === 'belongsTo') {
                         let id = oldRelationships[name],
                             value = id;
 
