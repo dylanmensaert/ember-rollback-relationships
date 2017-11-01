@@ -52,7 +52,12 @@ export default {
             didUpdate: function() {
                 this.resetOldRelationships();
             },
-            rollbackAttributes: function() {
+            rollbackAttributes: function({ rollBackRelationships = true }) {
+                if (!rollBackRelationships) {
+                    this._super();
+                    return;
+                }
+
                 let oldRelationships = this.get('oldRelationships');
 
                 this.eachRelationship(function(name, descriptor) {
