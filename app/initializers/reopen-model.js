@@ -1,80 +1,175 @@
+import Ember from 'ember';
 import DS from 'ember-data';
+
+function getInverse(name) {
+    let relationship = this.relationshipsByName.get(name),
+        inverse = relationship.options.inverse;
+
+    if (!inverse) {
+        relationship.eachRelationship((name, descriptor) => {
+            if (descriptor.kind !== relationship.kind && this.constructor.modelName === descriptor.type) {
+                inverse = name;
+            }
+        });
+    }
+
+    return inverse;
+}
+
+function getOldHasManyIds(name, id) {
+    let relationship = this.relationshipsByName.get(name),
+        record = this.store.peekRecord(relationship.type, id),
+        inverse = getInverse.call(this, name);
+
+    if (!record.oldRelationshipIdsByName[inverse]) {
+        record.oldRelationshipIdsByName[inverse] = [];
+    }
+
+    return record.oldRelationshipIdsByName[inverse];
+}
+
+function commitBelongsTo(name) {
+    let oldRelationshipIdsByName = this.get('oldRelationshipIdsByName'),
+        oldId = oldRelationshipIdsByName[name],
+        id = this.belongsTo(name).id();
+
+    if (oldId !== id) {
+        if (oldId) {
+            let oldHasManyIds = getOldHasManyIds.call(this, name, oldId);
+
+            oldHasManyIds.splice(oldHasManyIds.indexOf(this.get('id')), 1);
+        }
+
+        if (id) {
+            let oldHasManyIds = getOldHasManyIds.call(this, name, id);
+
+            oldHasManyIds.push(this.get('id'));
+
+            oldRelationshipIdsByName[name] = id;
+        } else {
+            delete oldRelationshipIdsByName[name];
+        }
+    }
+}
+
+function commit() {
+    Ember.run.schedule('actions', this, function () {
+        this.eachRelationship((name, descriptor) => {
+            if (descriptor.kind === 'belongsTo') {
+                commitBelongsTo.call(this, name);
+            }
+        });
+    });
+}
 
 export default {
     name: 'reopen-model',
-    initialize: function() {
+    initialize: function () {
         DS.Model.reopen({
-            oldRelationships: null,
-            resetOldRelationships: function() {
-                let oldRelationships = {};
+            oldRelationshipIdsByName: {},
+            changedRelationship: function (name) {
+                let relationship = this.relationshipsByName.get(name);
 
-                Ember.run.schedule('actions', this, function() {
-                    this.eachRelationship(function(name, descriptor) {
-                        if (descriptor.kind === 'belongsTo') {
-                            let id = this.belongsTo(name).id();
+                if (relationship.kind === 'belongsTo') {
+                    let oldRelationshipIdsByName = this.get('oldRelationshipIdsByName'),
+                        oldId = oldRelationshipIdsByName[name];
 
-                            if (!id) {
-                                id = null;
-                            }
-
-                            oldRelationships[name] = id;
-                        }
-                    }, this);
-
-                    this.set('oldRelationships', oldRelationships);
-                });
-            },
-            getChangedRelationships: function() {
-                let oldRelationships = this.get('oldRelationships'),
-                    changedRelationships = {};
-
-                this.eachRelationship(function(name, descriptor) {
-                    if (descriptor.kind === 'belongsTo') {
+                    if (oldId) {
                         let id = this.belongsTo(name).id();
 
-                        if (oldRelationships[name] !== id) {
-                            changedRelationships[name] = id;
+                        if (oldId !== id) {
+                            return [
+                                oldId,
+                                id
+                            ];
                         }
                     }
-                }, this);
+                } else {
+                    let oldHasManyIds = this.oldRelationshipIdsByName[name],
+                        hasManyIds = [];
+
+                    this.get(name).forEach((child) => {
+                        let id = child.get('id');
+
+                        hasManyIds.push(id);
+                    });
+
+                    if (JSON.stringify(oldHasManyIds.sort()) !== JSON.stringify(hasManyIds.sort())) {
+                        return [
+                            oldHasManyIds,
+                            hasManyIds
+                        ];
+                    }
+                }
+            },
+            changedRelationships: function (kind) {
+                let changedRelationships = {};
+
+                this.eachRelationship((name, descriptor) => {
+                    if (!kind || descriptor.kind === kind) {
+                        changedRelationships[name] = this.changedRelationship(name);
+                    }
+                });
 
                 return changedRelationships;
             },
-            ready: function() {
-                this.resetOldRelationships();
-            },
-            didCreate: function() {
-                this.resetOldRelationships();
-            },
-            didLoad: function() {
-                this.resetOldRelationships();
-            },
-            didUpdate: function() {
-                this.resetOldRelationships();
-            },
-            rollbackAttributes: function() {
-                let oldRelationships = this.get('oldRelationships');
+            rollbackRelationship: function (name) {
+                let relationship = this.relationshipsByName.get(name);
 
-                this.eachRelationship(function(name, descriptor) {
-                    if (descriptor.kind === 'belongsTo') {
-                        let id = oldRelationships[name],
-                            value = id;
+                if (relationship.kind === 'belongsTo') {
+                    let oldRelationshipIdsByName = this.get('oldRelationshipIdsByName'),
+                        id = oldRelationshipIdsByName[name],
+                        value = id;
 
-                        if (id) {
-                            let record = this.store.peekRecord(descriptor.type, id);
+                    if (id) {
+                        let relationship = this.relationshipsByName.get(name),
+                            record = this.store.peekRecord(relationship.type, id);
 
-                            if (record) {
-                                value = record;
-                            }
+                        if (record) {
+                            value = record;
                         }
-
-                        this.set(name, value);
                     }
-                }, this);
 
-                this.resetOldRelationships();
+                    this.set(name, value);
+                    commitBelongsTo.call(this, name);
+                } else {
+                    let changedRelationship = this.changedRelationship(name);
 
-                this._super();
+                    if (changedRelationship) {
+                        let changedHasManyIds = new Set(changedRelationship[0]),
+                            inverse = getInverse.call(this, name);
+
+                        changedRelationship[1].forEach(function (id) {
+                            changedHasManyIds.add(id);
+                        });
+
+                        changedHasManyIds.forEach(function (recordId) {
+                            let relationship = this.relationshipsByName.get(name),
+                                record = this.store.peekRecord(relationship.type, recordId);
+
+                            record.rollbackRelationship(inverse);
+                        });
+                    }
+                }
+            },
+            rollbackRelationships: function (kind) {
+                this.eachRelationship((name, descriptor) => {
+                    if (!kind || descriptor.kind === kind) {
+                        this.rollbackRelationship(name);
+                    }
+                });
+            },
+            ready: function () {
+                commit.call(this);
+            },
+            didCreate: function () {
+                commit.call(this);
+            },
+            didLoad: function () {
+                commit.call(this);
+            },
+            didUpdate: function () {
+                commit.call(this);
             }
         });
     }
