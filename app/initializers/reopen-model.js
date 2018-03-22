@@ -21,16 +21,16 @@ function getOldHasManyIds(name, id) {
         record = this.store.peekRecord(relationship.type, id),
         inverse = getInverse.call(this, name);
 
-    if (!record.oldRelationshipIdsByName[inverse]) {
-        record.oldRelationshipIdsByName[inverse] = [];
+    if (!record.oldRelationshipIdByName[inverse]) {
+        record.oldRelationshipIdByName[inverse] = [];
     }
 
-    return record.oldRelationshipIdsByName[inverse];
+    return record.oldRelationshipIdByName[inverse];
 }
 
 function commitBelongsTo(name) {
-    let oldRelationshipIdsByName = this.get('oldRelationshipIdsByName'),
-        oldId = oldRelationshipIdsByName[name],
+    let oldRelationshipIdByName = this.get('oldRelationshipIdByName'),
+        oldId = oldRelationshipIdByName[name],
         id = this.belongsTo(name).id();
 
     if (oldId !== id) {
@@ -45,9 +45,9 @@ function commitBelongsTo(name) {
 
             oldHasManyIds.push(this.get('id'));
 
-            oldRelationshipIdsByName[name] = id;
+            oldRelationshipIdByName[name] = id;
         } else {
-            delete oldRelationshipIdsByName[name];
+            delete oldRelationshipIdByName[name];
         }
     }
 }
@@ -66,13 +66,13 @@ export default {
     name: 'reopen-model',
     initialize: function () {
         DS.Model.reopen({
-            oldRelationshipIdsByName: {},
+            oldRelationshipIdByName: {},
             changedRelationship: function (name) {
                 let relationship = this.relationshipsByName.get(name);
 
                 if (relationship.kind === 'belongsTo') {
-                    let oldRelationshipIdsByName = this.get('oldRelationshipIdsByName'),
-                        oldId = oldRelationshipIdsByName[name];
+                    let oldRelationshipIdByName = this.get('oldRelationshipIdByName'),
+                        oldId = oldRelationshipIdByName[name];
 
                     if (oldId) {
                         let id = this.belongsTo(name).id();
@@ -85,7 +85,7 @@ export default {
                         }
                     }
                 } else {
-                    let oldHasManyIds = this.oldRelationshipIdsByName[name],
+                    let oldHasManyIds = this.oldRelationshipIdByName[name],
                         hasManyIds = [];
 
                     this.get(name).forEach((child) => {
@@ -117,8 +117,8 @@ export default {
                 let relationship = this.relationshipsByName.get(name);
 
                 if (relationship.kind === 'belongsTo') {
-                    let oldRelationshipIdsByName = this.get('oldRelationshipIdsByName'),
-                        id = oldRelationshipIdsByName[name],
+                    let oldRelationshipIdByName = this.get('oldRelationshipIdByName'),
+                        id = oldRelationshipIdByName[name],
                         value = id;
 
                     if (id) {
