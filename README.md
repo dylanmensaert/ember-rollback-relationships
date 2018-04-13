@@ -12,7 +12,7 @@ Notes
 
 Don't forget to call `model.rollbackAttributes()` yourself if required.
 
-Calling `this._super();` is required if you are using any of the following Events:
+Calling `this._super();` is mandatory if you are using any of the following Events:
 - ready
 - didCreate
 - didLoad
