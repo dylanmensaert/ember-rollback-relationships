@@ -1,7 +1,4 @@
 # ember-rollback-relationships
-[![Build Status](https://api.travis-ci.org/dylanmensaert/ember-rollback-relationships.png)](https://travis-ci.org/dylanmensaert/ember-rollback-relationships)
-[![Code Climate](https://codeclimate.com/github/dylanmensaert/ember-rollback-relationships.png)](https://codeclimate.com/github/dylanmensaert/ember-rollback-relationships)
-[![Dependency Status](https://www.versioneye.com/user/projects/59cbd0032de28c00382c93b2/badge.svg?style=flat)](https://www.versioneye.com/user/projects/59cbd0032de28c00382c93b2)
 
 `ember install ember-rollback-relationships`
 
