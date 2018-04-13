@@ -18,10 +18,10 @@ Calling `this._super();` is required if you are using any of the following Event
 API
 ---
 
-### rollbackRelationships(kind)
+### rollbackRelationships(`kind`)
 
-Performs a rollback on the current model for every relation that meets the given criteria.
-Possible values for `kind` are restricted to: ``, `belongsTo` and `hasMany`.
+Performs a rollback on the current model for every relationship that meets the given criteria.
+`kind` *String* **belongsTo** and **hasMany**
 
 ```js
 // app/models/blog.js
@@ -50,10 +50,10 @@ blog.rollbackRelationships('belongsTo');
 user.rollbackRelationships('hasMany');
 ```
 
-### rollbackRelationship(name)
+### rollbackRelationship(`name`)
 
-Performs a rollback of the given relationship name on the current model.
-Possible values for `name` are determined by your relationships defined via: `DS.belongsTo` and `DS.hasMany`
+Performs a rollback on the current model for the given relationship only.
+`name` *String* of the relationship
 
 ```js
 // app/models/blog.js
