@@ -5,7 +5,9 @@
 
 `ember install ember-rollback-relationships`
 
-Adds behaviour to [DS.Model](http://emberjs.com/api/data/classes/DS.Model.html) so belongsTo and hasMany **relationships** can also be rolled back. Don't forget to call `model.rollbackAttributes()` yourself.
+Adds behaviour to [DS.Model](http://emberjs.com/api/data/classes/DS.Model.html) so belongsTo and hasMany **relationships** can also be rolled back.
+
+Don't forget to call `model.rollbackAttributes()` yourself.
 
 This addon works without having to write additional code.
 
