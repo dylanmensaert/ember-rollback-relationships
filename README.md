@@ -5,7 +5,7 @@
 
 `ember install ember-rollback-relationships`
 
-Adds behaviour to [DS.Model](http://emberjs.com/api/data/classes/DS.Model.html) so belongsTo **relationships** are also rolled back when `model.rollbackAttributes()` is called.
+Adds behaviour to [DS.Model](http://emberjs.com/api/data/classes/DS.Model.html) so belongsTo and hasMany **relationships** can also be rolled back. Don't forget to call `model.rollbackAttributes()` yourself.
 
 This addon works without having to write additional code.
 
@@ -18,12 +18,64 @@ Calling `this._super();` is required if you are using any of the following Event
 API
 ---
 
-### getChangedRelationships()
+### rollbackRelationships(kind)
 
-Returns an `object` containing the changed relationships by `name` (key) and `id` (value).
+Performs a rollback on the current model for every relation that meets the given criteria.
+Possible values for `kind` are restricted to: ``, `belongsTo` and `hasMany`.
 
 ```js
-let foo = this.store.createRecord('foo');
+// app/models/blog.js
+export default DS.Model.extend({
+  user: DS.belongsTo()
+});
 
-console.assert({}, foo.getChangedRelationships());
+// app/models/post.js
+export default DS.Model.extend({
+  user: DS.belongsTo()
+});
+
+// app/models/user.js
+export default DS.Model.extend({
+  blogs: DS.hasMany(),
+  posts: DS.hasMany()
+});
+
+// Rollback blogs and posts (all relationships)
+user.rollbackRelationships();
+
+// Rollback user (all belongsTo relationships)
+blog.rollbackRelationships('belongsTo');
+
+// Rollback blogs and posts (all hasMany relationships)
+user.rollbackRelationships('hasMany');
 ```
+
+### rollbackRelationship(name)
+
+Performs a rollback of the given relationship name on the current model.
+Possible values for `name` are determined by your relationships defined via: `DS.belongsTo` and `DS.hasMany`
+
+```js
+// app/models/blog.js
+export default DS.Model.extend({
+  user: DS.belongsTo()
+});
+
+// app/models/post.js
+export default DS.Model.extend({
+  user: DS.belongsTo()
+});
+
+// app/models/user.js
+export default DS.Model.extend({
+  blogs: DS.hasMany(),
+  posts: DS.hasMany()
+});
+
+// Rollback user only
+blog.rollbackRelationship('user');
+
+// Rollback blogs only
+user.rollbackRelationship('blogs');
+```
+
