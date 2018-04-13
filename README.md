@@ -23,6 +23,7 @@ API
 ### rollbackRelationships(`kind`)
 
 Performs a rollback on the current model for every relationship that meets the given criteria.
+
 `kind` *String* **belongsTo** and **hasMany**
 
 ```js
@@ -55,6 +56,7 @@ user.rollbackRelationships('hasMany');
 ### rollbackRelationship(`name`)
 
 Performs a rollback on the current model for the given relationship only.
+
 `name` *String* of the relationship
 
 ```js
