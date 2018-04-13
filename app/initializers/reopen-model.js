@@ -1,37 +1,47 @@
 import Ember from 'ember';
 import DS from 'ember-data';
 
+let hasManyIdsByBelongsTo = {};
+
 function commitBelongsTo(name, relationship) {
     let belongsToIdByName = this.get('belongsToIdByName'),
         oldBelongsToId = belongsToIdByName[name],
-        belongsTo = this.belongsTo(name),
-        belongsToId = belongsTo.id(),
+        belongsToId = this.belongsTo(name).id(),
         id = this.get('id');
 
     if (oldBelongsToId !== belongsToId) {
-        let inverse = this.getInverse(name);
-
         if (oldBelongsToId) {
-            let oldBelongsTo = this.store.peekRecord(relationship.type, oldBelongsToId),
-                inverseHasMany = oldBelongsTo.hasManyIdsByName[inverse];
+            let inverse = this.getInverse(name);
 
-            if(inverseHasMany) {
-              inverseHasMany.delete(id);
+            if (inverse) {
+                let inverseHasMany = hasManyIdsByBelongsTo[oldBelongsToId];
+
+                inverseHasMany[inverse].delete(id);
             }
         }
 
         if (belongsToId) {
-            let hasManyIdsByName = belongsTo.internalModel.record.hasManyIdsByName;
+            let inverse = this.getInverse(name);
 
-            if(!hasManyIdsByName[inverse]) {
-              hasManyIdsByName[inverse] = new Set();
+            if (inverse) {
+                let hasManyIdsByName;
+
+                if (!hasManyIdsByBelongsTo[belongsToId]) {
+                    hasManyIdsByBelongsTo[belongsToId] = {};
+                }
+
+                hasManyIdsByName = hasManyIdsByBelongsTo[belongsToId];
+
+                if (!hasManyIdsByName[inverse]) {
+                    hasManyIdsByName[inverse] = new Set();
+                }
+
+                belongsToIdByName[name] = belongsToId;
+
+                hasManyIdsByName[inverse].add(id);
             }
-
-            belongsToIdByName[name] = belongsToId;
-
-            hasManyIdsByName[inverse].add(id);
         } else {
-          delete belongsToIdByName[name];
+            delete belongsToIdByName[name];
         }
     }
 }
@@ -51,30 +61,28 @@ export default {
     initialize: function() {
         DS.Model.reopen({
             init: function() {
-              this._super();
+                this._super();
 
-              this.set('belongsToIdByName', {});
-              this.set('hasManyIdsByName', {});
+                this.set('belongsToIdByName', {});
             },
             belongsToIdByName: null,
-            hasManyIdsByName: null,
             getRelationship: function(name) {
-              let relationship;
+                let relationship;
 
-              this.eachRelationship((relationshipName, descriptor) => {
-                if(name === relationshipName) {
-                  relationship = descriptor;
-                }
-              });
+                this.eachRelationship((relationshipName, descriptor) => {
+                    if (name === relationshipName) {
+                        relationship = descriptor;
+                    }
+                });
 
-              return relationship;
+                return relationship;
             },
             getInverse: function(name) {
                 let relationship = this.getRelationship(name),
                     inverse = relationship.options.inverse;
 
                 if (!inverse) {
-                  this.belongsTo(name).internalModel.eachRelationship((name, descriptor) => {
+                    this.belongsTo(name).belongsToRelationship.inverseRecord.eachRelationship((name, descriptor) => {
                         if (descriptor.kind !== relationship.kind && this.constructor.modelName === descriptor.type) {
                             inverse = name;
                         }
@@ -101,7 +109,8 @@ export default {
 
                     this.set(name, value);
                 } else {
-                    let hasManyIds = new Set(this.hasManyIdsByName[name]);
+                    let hasManyIdsByName = hasManyIdsByBelongsTo[this.get('id')],
+                        hasManyIds = new Set(hasManyIdsByName[name]);
 
                     if (hasManyIds) {
                         let inverse = this.getInverse(name);
@@ -127,11 +136,6 @@ export default {
                         this.rollbackRelationship(name);
                     }
                 });
-            },
-            rollbackAttributes: function() {
-              this.rollbackRelationships();
-
-              this._super();
             },
             ready: function() {
                 commit.call(this);
