@@ -81,11 +81,11 @@ export default {
                     inverse = relationship.options.inverse;
 
                 if (!inverse) {
-                    this.belongsTo(name).belongsToRelationship.inverseRecord.eachRelationship((name, descriptor) => {
-                        if (descriptor.kind !== relationship.kind && this.constructor.modelName === descriptor.type) {
-                            inverse = name;
-                        }
-                    });
+                    if(relationship.kind === 'belongsTo') {
+                        inverse = this.belongsTo(name).belongsToRelationship.inverseKey;
+                    } else {
+                        inverse = this.hasMany(name).hasManyRelationship.inverseKey;
+                    }
                 }
 
                 return inverse;
