@@ -15,6 +15,8 @@ Calling `this._super();` is mandatory if you are using any of the following Even
 - didLoad
 - didUpdate
 
+**Many-to-many** relationships are not supported!
+
 API
 ---
 
