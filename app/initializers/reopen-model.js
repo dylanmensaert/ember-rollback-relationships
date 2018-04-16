@@ -35,10 +35,10 @@ function commitBelongsTo(name, relationship) {
                     hasManyByName[inverse] = new Set();
                 }
 
-                belongsToIdByName[name] = belongsToId;
-
                 hasManyByName[inverse].add(this);
             }
+
+            belongsToIdByName[name] = belongsToId;
         } else {
             delete belongsToIdByName[name];
         }
