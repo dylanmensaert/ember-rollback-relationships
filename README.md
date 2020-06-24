@@ -9,12 +9,6 @@ Notes
 
 Don't forget to call `model.rollbackAttributes()` yourself if required.
 
-Calling `this._super();` is mandatory if you are using any of the following Events:
-- ready
-- didCreate
-- didLoad
-- didUpdate
-
 **Many-to-many** relationships are not supported!
 
 API
