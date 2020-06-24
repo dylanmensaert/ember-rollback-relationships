@@ -1,5 +1,6 @@
-import Ember from 'ember';
-import DS from 'ember-data';
+import { schedule } from '@ember/runloop';
+import { observer } from '@ember/object';
+import Model from '@ember-data/model';
 
 let hasManyByBelongsToId = {};
 
@@ -46,7 +47,7 @@ function commitBelongsTo(name, relationship) {
 }
 
 function commit() {
-    Ember.run.schedule('actions', this, function() {
+    schedule('actions', this, function() {
         this.eachRelationship((name, descriptor) => {
             if (descriptor.kind === 'belongsTo') {
                 commitBelongsTo.call(this, name, descriptor);
@@ -58,7 +59,7 @@ function commit() {
 export default {
     name: 'reopen-model',
     initialize: function() {
-        DS.Model.reopen({
+        Model.reopen({
             init: function() {
                 this._super();
 
@@ -131,18 +132,11 @@ export default {
                     }
                 });
             },
-            ready: function() {
-                commit.call(this);
-            },
-            didCreate: function() {
-                commit.call(this);
-            },
-            didLoad: function() {
-                commit.call(this);
-            },
-            didUpdate: function() {
-                commit.call(this);
-            }
+            isLoadedObserver: observer('isNew', 'isLoaded', 'hasDirtyAttributes', 'isValid', function() {
+                if (this.get('isNew') || this.get('isLoaded') || this.get('hasDirtyAttributes') || this.get('isValid')){
+                    commit.call(this);
+                }
+            })
         });
     }
 }
